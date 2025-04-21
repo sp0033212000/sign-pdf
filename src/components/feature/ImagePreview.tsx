@@ -11,6 +11,7 @@ import { Rnd, RndDragCallback, RndResizeCallback } from "react-rnd";
 import Image from "next/image";
 import Signature from "@/../public/assets/images/signature.png";
 import { clsx } from "clsx";
+import downloadPDF from "@/utils/downloadPDF";
 
 const ImagePreview: React.FC<{
   src: string;
@@ -61,27 +62,7 @@ const ImagePreview: React.FC<{
   const handleDownloadPDF = useCallback(async () => {
     if (!containerRef.current) return;
 
-    const html2canvas = (await import("html2canvas-pro")).default;
-    const { jsPDF } = await import("jspdf");
-
-    const canvas = await html2canvas(containerRef.current, {
-      scale: 2,
-      useCORS: true,
-    });
-
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "pt",
-      format: "a4",
-    });
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
-    pdf.save(`${name}_signed.pdf`);
+    await downloadPDF([containerRef.current], name);
   }, [name]);
 
   const onAnchorClick = useCallback<React.MouseEventHandler<HTMLAnchorElement>>(

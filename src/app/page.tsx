@@ -3,11 +3,13 @@
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useOnceEffect } from "@reactuses/core";
 
 import { pdfjs } from "react-pdf";
 import ImagePreview from "@/components/feature/ImagePreview";
+import { clsx } from "clsx";
+import downloadPDF from "@/utils/downloadPDF";
 
 export default function PdfPreviewPage() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -86,21 +88,53 @@ export default function PdfPreviewPage() {
 
       {isLoading && <p className="text-blue-600">Rendering images...</p>}
 
-      {rawImages.map((images, fileIdx) => (
-        <div key={fileIdx} className="space-y-2">
-          <h3 className="text-lg font-medium">
-            {uploadedFiles[fileIdx]?.name.replace(/\.[^/.]+$/, "")}
-          </h3>
-          {images.map((src, idx) => (
-            <ImagePreview
-              key={idx}
-              src={src}
-              index={idx}
-              fileName={uploadedFiles[fileIdx]?.name.replace(/\.[^/.]+$/, "")}
-            />
-          ))}
-        </div>
-      ))}
+      {rawImages.map((images, fileIdx) => {
+        const fileName = uploadedFiles[fileIdx]?.name.replace(/\.[^/.]+$/, "");
+        return (
+          <Group key={fileIdx} fileName={fileName}>
+            {images.map((src, idx) => (
+              <ImagePreview
+                key={idx}
+                src={src}
+                index={idx}
+                fileName={fileName}
+              />
+            ))}
+          </Group>
+        );
+      })}
     </main>
   );
 }
+
+const Group: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+  fileName?: string;
+}> = ({ children, className, fileName = "" }) => {
+  const groupRef = useRef<HTMLDivElement>(null);
+
+  const handleClick = useCallback(async () => {
+    const children = groupRef.current?.children;
+    if (!children) return;
+    await downloadPDF(Array.from(children) as HTMLElement[], fileName);
+  }, []);
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-lg font-medium">{fileName}</h3>
+      <button
+        onClick={handleClick}
+        className={clsx(
+          "px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700",
+          "w-full",
+        )}
+      >
+        下載整份 PDF
+      </button>
+      <div className={clsx("space-y-4", className)} ref={groupRef}>
+        {children}
+      </div>
+    </div>
+  );
+};
