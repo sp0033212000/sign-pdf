@@ -4,10 +4,10 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
 import React, { useCallback, useRef, useState } from "react";
-import { useAsyncEffect, useOnceEffect } from "@reactuses/core";
+import { useAsyncEffect } from "@reactuses/core";
 import { StaticImageData } from "next/image";
 
-import { pdfjs } from "react-pdf";
+import { pdfjs as _pdfjs } from "react-pdf";
 import { clsx } from "clsx";
 
 import ImagePreview from "@/components/feature/ImagePreview";
@@ -68,12 +68,19 @@ export default function PdfPreviewPage() {
     null,
   );
   const [hasDefaultSignature, setHasDefaultSignature] = useState(false);
+  const [pdfjs, setPdfjs] = useState<typeof _pdfjs | null>();
 
-  useOnceEffect(() => {
-    if (typeof window !== "undefined") {
-      pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-    }
-  }, []);
+  useAsyncEffect(
+    async () => {
+      if (typeof window !== "undefined") {
+        const pdfjs = (await import("react-pdf")).pdfjs;
+        pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+        setPdfjs(pdfjs);
+      }
+    },
+    () => {},
+    [],
+  );
 
   useAsyncEffect(
     async () => {
@@ -86,7 +93,7 @@ export default function PdfPreviewPage() {
   );
 
   const renderPageToImage = useCallback(
-    async (page: pdfjs.PDFPageProxy): Promise<string> => {
+    async (page: _pdfjs.PDFPageProxy): Promise<string> => {
       const scale = window.devicePixelRatio * 2;
       const viewport = page.getViewport({ scale });
       const canvas = document.createElement("canvas");
@@ -105,7 +112,8 @@ export default function PdfPreviewPage() {
 
   const renderPdfToImages = useCallback(
     async (file: File): Promise<string[]> => {
-      const pdf = await pdfjs.getDocument(await file.arrayBuffer()).promise;
+      if (!pdfjs) return [];
+      const pdf = await pdfjs?.getDocument(await file.arrayBuffer()).promise;
       const totalPages = pdf.numPages;
       const images: string[] = [];
 
@@ -117,7 +125,7 @@ export default function PdfPreviewPage() {
 
       return images;
     },
-    [renderPageToImage],
+    [renderPageToImage, pdfjs],
   );
 
   const handleFileUpload = useCallback(
