@@ -76,15 +76,24 @@ export default function PdfPreviewPage() {
 
   return (
     <main className="p-8 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">PDF to Image Converter</h1>
+      <h1 className="text-2xl font-bold mb-4">PDF Signature Generator</h1>
 
-      <input
-        type="file"
-        accept="application/pdf"
-        multiple
-        onChange={handleFileUpload}
-        className="mb-6"
-      />
+      <div className={clsx("flex space-x-4", "mb-6")}>
+        <UploadButton
+          id={"pdf-file"}
+          accept={"application/pdf"}
+          multiple
+          onChange={handleFileUpload}
+          className={clsx("bg-green-600")}
+          name={"Upload PDFs"}
+        />
+        <UploadButton
+          id={"signature"}
+          accept={"image/*"}
+          name={"Upload Signature"}
+          className={clsx("bg-blue-600")}
+        />
+      </div>
 
       {isLoading && <p className="text-blue-600">Rendering images...</p>}
 
@@ -106,6 +115,26 @@ export default function PdfPreviewPage() {
     </main>
   );
 }
+
+const UploadButton: React.FC<React.JSX.IntrinsicElements["input"]> = ({
+  className,
+  ...props
+}) => {
+  return (
+    <label
+      htmlFor={props.id}
+      className={clsx("py-3 px-4", "rounded-lg", className)}
+    >
+      <span>{props.name}</span>
+      <input
+        type="file"
+        onChange={props.onChange}
+        className={"hidden invisible"}
+        {...props}
+      />
+    </label>
+  );
+};
 
 const Group: React.FC<{
   children: React.ReactNode;
