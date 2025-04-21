@@ -21,9 +21,10 @@ export const metadata: Metadata = {
     type: "website",
     title: "PDFs Signature Generator",
     description: "Generate PDFs Signatures",
+    url: "https://sign-pdf-pi.vercel.app",
     images: [
       {
-        url: "https://pdf-signature-generator.vercel.app/android-chrome-512x512.png",
+        url: "https://sign-pdf-pi.vercel.app/android-chrome-512x512.png",
         width: 1200,
         height: 630,
         alt: "PDFs Signature Generator",
