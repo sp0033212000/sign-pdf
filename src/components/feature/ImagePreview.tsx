@@ -7,17 +7,21 @@ import React, {
   useRef,
   useState,
 } from "react";
+
+import Image, { StaticImageData } from "next/image";
+
 import { Rnd, RndDragCallback, RndResizeCallback } from "react-rnd";
-import Image from "next/image";
-import Signature from "@/../public/assets/images/signature.png";
+
 import { clsx } from "clsx";
+
 import downloadPDF from "@/utils/downloadPDF";
 
 const ImagePreview: React.FC<{
   src: string;
   fileName?: string;
   index: number;
-}> = ({ src, fileName = "", index }) => {
+  signatureFile?: StaticImageData | null;
+}> = ({ src, fileName = "", index, signatureFile }) => {
   const [dimensions, setDimensions] = useState<{
     width: number;
     height: number;
@@ -35,21 +39,22 @@ const ImagePreview: React.FC<{
   );
 
   useEffect(() => {
+    if (!signatureFile) return;
     if (containerRef.current) {
       const containerWidth = containerRef.current.offsetWidth;
-      const aspectRatio = Signature.height / Signature.width;
+      const aspectRatio = signatureFile.height / signatureFile.width;
       const width = containerWidth * 0.8;
       const height = containerWidth * aspectRatio * 0.8;
       setDimensions({ width, height });
     }
-  }, []);
+  }, [signatureFile]);
 
-  const handleDragStop: RndDragCallback = useCallback((e, d) => {
+  const handleDragStop: RndDragCallback = useCallback((_e, d) => {
     setPosition({ x: d.x, y: d.y });
   }, []);
 
   const handleResizeStop: RndResizeCallback = useCallback(
-    (e, direction, ref, delta, newPosition) => {
+    (_e, _direction, ref, _delta, newPosition) => {
       setDimensions({
         width: ref.offsetWidth,
         height: ref.offsetHeight,
@@ -98,7 +103,7 @@ const ImagePreview: React.FC<{
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={src} alt={name} className={"block w-full"} />
         </a>
-        {dimensions.width > 0 && (
+        {dimensions.width > 0 && signatureFile && (
           <Rnd
             size={{ width: dimensions.width, height: dimensions.height }}
             position={{ x: position.x, y: position.y }}
@@ -113,7 +118,7 @@ const ImagePreview: React.FC<{
             )}
           >
             <Image
-              src={Signature}
+              src={signatureFile}
               alt="Signature"
               className={clsx("select-none pointer-events-none")}
             />
